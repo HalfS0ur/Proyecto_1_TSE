@@ -5,7 +5,7 @@ def formato_video(cuadro):
     nuevo_tamanno = cv2.resize(cuadro, (700, 500))
     return nuevo_tamanno
 
-##TODO FILTRAR EL VIDEO POR COLOR, DEJAR SOLO LAS LINEAS BLANCAS
+##TODO FILTRAR EL VIDEO POR COLOR, DEJAR SOLO LAS LINEAS BLANCAS y amarillas
 
 def preprocesamiento(cuadro):
     if cuadro is None:
