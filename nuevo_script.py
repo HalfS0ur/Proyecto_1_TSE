@@ -5,14 +5,17 @@ def formato_video(cuadro):
     nuevo_tamanno = cv2.resize(cuadro, (700, 500))
     return nuevo_tamanno
 
-##TODO FILTRAR EL VIDEO POR COLOR, DEJAR SOLO LAS LINEAS BLANCAS y amarillas
-
 def preprocesamiento(cuadro):
     if cuadro is None:
         video.release()
         cv2.destroyAllWindows()
         exit()
-    escala_grises = cv2.cvtColor(cuadro, cv2.COLOR_BGR2GRAY)
+    hsv = cv2.cvtColor(cuadro, cv2.COLOR_BGR2HSV)
+    lower_white = np.array([0,0,170]) #lower_white = np.array([0,0,170])
+    upper_white = np.array([106,27,255]) #upper_white = np.array([106,27,255])
+    mask = cv2.inRange(hsv, lower_white, upper_white)
+    res = cv2.bitwise_and(cuadro, cuadro, mask=mask)
+    escala_grises = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(escala_grises, (5, 5), 0)
     filtro_canny = cv2.Canny(blur, 50, 150)
     return filtro_canny
@@ -22,15 +25,15 @@ def region_de_interes(imagen_canny):
     horizontal = imagen_canny.shape[1]
     mascara = np.zeros_like(imagen_canny)
     triangulo = np.array([[
-    (90, vertical),
-    (390, 230),
-    (600, horizontal),]], np.int32)
+    (65, vertical),
+    (335, 250),
+    (675, horizontal),]], np.int32)
     cv2.fillPoly(mascara, triangulo, 255)
     resultante = cv2.bitwise_and(imagen_canny, mascara)
     return resultante
 
 def transformada_hough(area_canny):
-    return cv2.HoughLinesP(area_canny, 1.3, np.pi/180, 100, np.array([]), minLineLength=60, maxLineGap=300)
+    return cv2.HoughLinesP(area_canny, 1.5, np.pi/180, 100, np.array([]), minLineLength=10, maxLineGap=500) #return cv2.HoughLinesP(area_canny, 1.3, np.pi/180, 100, np.array([]), minLineLength=20, maxLineGap=300)
 
 def calcular_puntos(cuadro, lineas):
     if lineas is None:
@@ -83,12 +86,12 @@ def dibujar_lineas(cuadro, lineas):
     return imagen_lineas
 
 #Main que no se llama main
-video = cv2.VideoCapture("test2.mp4")
+video = cv2.VideoCapture("video2.mp4")
 while(video.isOpened()):
     _, frame = video.read()
     estandarizar_tamanno = formato_video(frame)
     preprocesar_imagen = preprocesamiento(estandarizar_tamanno)
-    area_canny = region_de_interes(preprocesar_imagen)
+    area_canny = region_de_interes(preprocesar_imagen) #area_canny = region_de_interes(preprocesar_imagen)
 
     lineas = transformada_hough(area_canny)
     promedio_lineas = pendiente_promedio(estandarizar_tamanno, lineas)
@@ -98,7 +101,7 @@ while(video.isOpened()):
     print(pendiente_promedio(estandarizar_tamanno, lineas)) #quitar
     cv2.imshow("result", playback)
     
-    if cv2.waitKey(30) & 0xFF == ord('q'):
+    if cv2.waitKey(30) & 0xFF == ord('q'): #if cv2.waitKey(30) & 0xFF == ord('q'):
         break
 
 video.release()
